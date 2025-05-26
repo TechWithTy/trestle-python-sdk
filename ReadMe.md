@@ -1,76 +1,133 @@
-# Trestle API Integration
+# Trestle Python SDK
 
-This module provides a Python client for interacting with the Trestle API, specifically the Reverse Phone Lookup service. The client is designed to be async-first, type-safe, and production-ready.
+A comprehensive Python client for the Trestle API, providing seamless integration with Trestle's OSINT and data enrichment services. Built with async/await support, type safety, and production-grade error handling.
 
-## Features
+[![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-- **Async/Await Support**: Built on top of `httpx` for non-blocking HTTP requests
-- **Type Safety**: Uses Pydantic models for request/response validation
-- **Retry Logic**: Automatic retries with exponential backoff
-- **Error Handling**: Comprehensive error types for different failure scenarios
-- **Configuration**: Environment variable based configuration with sensible defaults
-- **Documentation**: Full docstrings and type hints for better IDE support
+## ✨ Features
 
-## Installation
+- **Complete API Coverage**: Full support for all Trestle API endpoints
+  - Phone Validation & Lookup
+  - Reverse Phone Lookup
+  - Smart CNAM Lookup
+  - Reverse Address Lookup
+  - Real Contact Verification
+- **Modern Python**: Async/await support with `httpx`
+- **Type Safety**: Pydantic models for all requests/responses
+- **Production Ready**:
+  - Automatic retries with exponential backoff
+  - Comprehensive error handling
+  - Environment-based configuration
+  - Full test coverage
+  - Pre-commit hooks
+  - CI/CD ready
 
-Add the following to your `requirements.txt`:
+## 📦 Installation
 
+```bash
+# Using pip
+pip install trestle-python-sdk
+
+# Using poetry
+poetry add trestle-python-sdk
 ```
-httpx>=0.23.0
-pydantic>=1.10.0
-python-dotenv>=0.21.0
-tenacity>=8.1.0
-```
 
-## Configuration
+## ⚙️ Configuration
 
-Create a `.env` file in your project root with the following variables:
+Configure using environment variables or directly in your code:
 
 ```env
+# Required
 TRESTLE_API_KEY=your_api_key_here
-TRESTLE_BASE_URL=https://api.trestleiq.com/3.2  # Optional
-TRESTLE_TIMEOUT=30.0  # Optional, in seconds
-TRESTLE_MAX_RETRIES=3  # Optional
+
+# Optional
+TRESTLE_BASE_URL=https://api.trestleiq.com/3.2
+TRESTLE_TIMEOUT=30.0  # seconds
+TRESTLE_MAX_RETRIES=3
 ```
 
-## Usage
+## 🚀 Quick Start
 
-### Basic Example
+### Phone Validation
 
 ```python
 import asyncio
-from app.core.third_party_integrations.trestle import get_trestle_client
+from trestle import TrestleClient
 
-async def main():
-    async with get_trestle_client() as client:
-        try:
-            # Look up a phone number
-            result = await client.reverse_phone.lookup_phone("2069735100")
-            print(f"Phone: {result.phone_number}")
-            print(f"Carrier: {result.carrier}")
-            print(f"Line Type: {result.line_type}")
-            
-            if result.owners:
-                print("\nOwners:")
-                for owner in result.owners:
-                    print(f"- {getattr(owner, 'name', 'Unknown')}")
-                    
-        except Exception as e:
-            print(f"Error: {str(e)}")
+async def validate_phone():
+    async with TrestleClient() as client:
+        result = await client.phone_validation.validate(
+            phone="+12069735100",
+            country_hint="US"
+        )
+        print(f"Is valid: {result.is_valid}")
+        print(f"Carrier: {result.carrier}")
+        print(f"Line type: {result.line_type}")
 
-if __name__ == "__main__":
-    asyncio.run(main())
+asyncio.run(validate_phone())
 ```
 
-### With Hints
+### Reverse Phone Lookup
 
 ```python
-result = await client.reverse_phone.lookup_phone(
-    phone="2069735100",
-    country_hint="US",
-    name_hint="John Doe",
-    postal_code_hint="98101"
-)
+async def reverse_phone_lookup():
+    async with TrestleClient() as client:
+        result = await client.reverse_phone.lookup(
+            phone="2069735100",
+            country_hint="US"
+        )
+        if result.owners:
+            for owner in result.owners:
+                print(f"Owner: {owner.name}")
+                print(f"Type: {owner.type}")
+```python
+# Smart CNAM Lookup
+
+async def cnam_lookup():
+    async with TrestleClient() as client:
+        result = await client.smart_cnam.lookup(
+            phone="2069735100",
+            country_hint="US"
+        )
+        if result.belongs_to:
+            print(f"Name: {result.belongs_to.name}")
+            print(f"Type: {result.belongs_to.type}")
+```
+
+### Reverse Address Lookup
+
+```python
+async def reverse_address_lookup():
+    async with TrestleClient() as client:
+        result = await client.reverse_address.lookup(
+            address="1600 Amphitheatre Parkway",
+            city="Mountain View",
+            state="CA",
+            postal_code="94043"
+        )
+        if result.results:
+            for match in result.results:
+                print(f"Formatted Address: {match.formatted_address}")
+                print(f"Coordinates: {match.location.lat}, {match.location.lng}")
+```
+
+## 📚 Documentation
+
+For detailed documentation, including all available endpoints and models, please see our [documentation](https://techwithty.github.io/trestle-python-sdk/).
+
+## 🤝 Contributing
+
+Contributions are welcome! Please read our [contributing guidelines](CONTRIBUTING.md) to get started.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 📞 Contact
+
+For support or questions, please open an issue on our [GitHub repository](https://github.com/techwithty/trestle-python-sdk).
 ```
 
 ## API Reference
